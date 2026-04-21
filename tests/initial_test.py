@@ -7,7 +7,7 @@ from selenium import webdriver
 from time import sleep
 import unittest
 
-# creating test setup
+#
 class TestPageTitle(unittest.TestCase):
     def setUp(self):
         # Preconditions
@@ -22,3 +22,10 @@ class TestPageTitle(unittest.TestCase):
         actual_title = self.driver.title
         expected_title = 'STORE'
         self.assertEqual(actual_title, expected_title)
+
+# close browser after each test case
+def tearDown(self):
+    self.driver.quit()
+
+if __name__ == '__main__':
+    unittest.main()

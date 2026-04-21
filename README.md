@@ -40,19 +40,11 @@ The automated tests cover the following functionalities:
 demoblaze-selenium-python-tests/
 │
 ├── tests/
-│   ├── test_signup.py
-│   ├── test_login.py
-│   ├── test_cart.py
-│   ├── test_purchase.py
-│
-├── pages/                # (Optional: Page Object Model)
-│   ├── base_page.py
-│   ├── login_page.py
-│   ├── cart_page.py
-│
-├── utils/
-│   ├── driver_setup.py
-│
+│   ├── initial_test.py
+│   ├── test_Log_In_Of_Active_User.py
+│   ├── test_Purchase_Functionality.py
+│   ├── test_Sin_Up_of_New_User.py
+
 ├── requirements.txt
 └── README.md
 ```
@@ -64,8 +56,8 @@ demoblaze-selenium-python-tests/
 ### 1. Clone the repository
 
 ```
-git clone https://github.com/your-username/demoblaze-selenium-python-tests.git
-cd demoblaze-selenium-python-tests
+git clone https://github.com/agnichudy-max/demoblaze-qa-automation-python.git
+cd demoblaze-qa-automation-python
 ```
 
 ### 2. Install dependencies
