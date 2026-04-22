@@ -8,7 +8,7 @@ from time import sleep
 import unittest
 
 # creating test setup
-class Test_Payment_Functionality(unittest.TestCase):
+class Test_Displaying_Category_Functionality(unittest.TestCase):
     def setUp(self):
         # Preconditions
         # 1. Open the home page
@@ -31,3 +31,17 @@ class Test_Payment_Functionality(unittest.TestCase):
         actual_next_button = self.driver.find_element(By.ID, 'next2').text
         self.assertEqual(expected_next_button, actual_next_button)
 
+    # checking if NEXT button opens next page with more products from the same category
+    def test_TC_402_Navigate_To_Next_Page_In_Monitors_Category(self):
+            #  step 1 of the TC_402
+            monitor_link = self.driver.find_element(By.LINK_TEXT, "Monitors")
+            monitor_link.click()
+            # expected result of the TC_402
+            expected_previous_button = 'Previous'
+            actual_previous_button = self.driver.find_element(By.ID, 'prev2').text
+            # comparing actual result with expected result of TC_401
+            self.assertEqual(expected_previous_button, actual_previous_button)
+            expected_next_button = 'Next'
+            actual_next_button = self.driver.find_element(By.ID, 'next2').text
+            self.assertEqual(expected_next_button, actual_next_button)
+            # step 2 of the TC_402: click the NEXT button
