@@ -1,16 +1,10 @@
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.select import Select
-from selenium.webdriver.common.by import By
-from selenium import webdriver
-##from data_tools import *
-from time import sleep
 import unittest
+from selenium import webdriver
 
-#
+# creating test setup
 class TestPageTitle(unittest.TestCase):
     def setUp(self):
-        # Preconditions
+
         # 1. Open the home page
         self.driver = webdriver.Chrome()
         self.driver.maximize_window()
