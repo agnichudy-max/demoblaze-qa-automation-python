@@ -42,8 +42,9 @@ demoblaze-selenium-python-tests/
 ├── tests/
 │   ├── initial_test.py
 │   ├── test_Log_In_Of_Active_User.py
-│   ├── test_Purchase_Functionality.py
-│   ├── test_Sin_Up_of_New_User.py
+│   ├── test_Displaying_Category_Functionality.py
+│   ├── test_Sign_Up_of_New_User.py
+│   ├── test_Cart_Functionality.py
 
 ├── requirements.txt
 └── README.md
@@ -67,9 +68,9 @@ pip install -r requirements.txt
 ```
 
 ### 3. Run tests
-
+Observe the path where pytest is installed in your system.
 ```
-pytest
+<path>pytest
 ```
 
 ---
