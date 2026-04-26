@@ -6,13 +6,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-
-
-
 # creating test setup
 class Test_Cart_functionality(unittest.TestCase):
     def setUp(self):
-        # Preconditions
         # 1. Open the home page
         self.driver = webdriver.Chrome()
         self.driver.maximize_window()
@@ -110,7 +106,6 @@ class Test_Cart_functionality(unittest.TestCase):
 
         # checking if PLACE ORDER button is visible
         place_order_btn = self.driver.find_element(By.XPATH, "//button[text()='Place Order']")
-
 
         # Assertions
         self.assertEqual(len(products), 1)

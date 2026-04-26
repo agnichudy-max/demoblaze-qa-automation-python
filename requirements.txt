@@ -1,3 +1,4 @@
+wait
 selenium
 pytest
 webdriver-manager
