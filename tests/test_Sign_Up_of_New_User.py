@@ -1,108 +1,101 @@
 import unittest
-from time import sleep
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from faker import Faker
+from pages.home_page import HomePage
+from pages.signup_modal import SignUpModal
 
 
-class Test_Sign_Up_Of_New_User(unittest.TestCase):
+# This test class verifies signup validation scenarios:
+# - Empty input
+# - Missing username
+# - Missing password
+class TestSignUpOfNewUser(unittest.TestCase):
+
+    # ===== TEST DATA =====
+    BASE_URL = "https://www.demoblaze.com/index.html"
+
     def setUp(self):
+        # Runs before each test
 
-        # 1. Open the home page
+        # Start browser
         self.driver = webdriver.Chrome()
         self.driver.maximize_window()
-        self.driver.get('https://www.demoblaze.com/index.html')
-        self.driver.implicitly_wait(15)
 
-# trying to sign up a user without entering a username and password
-    def test_TC_105_Sign_Up_With_Empty_Username_And_Password(self):
+        # Initialize page objects
+        self.home_page = HomePage(self.driver)
+        self.signup_modal = SignUpModal(self.driver)
 
-        #  step 1 of the TC_105
-        element = self.driver.find_element(By.XPATH, '//*[@id="signin2"]').click()
-        sleep(5)
+        # generating random data for testing
+        self.fake = Faker()
 
-        # step 2 of the TC_105
-        username_input = self.driver.find_element(By.ID, "sign-username")
-        username_input.send_keys("")
+        # Open the application
+        self.home_page.open(self.BASE_URL)
 
-        # step 3 of the TC_105
-        password_input = self.driver.find_element(By.ID, "sign-password")
-        password_input.send_keys("")
+    # ===== TEST CASES =====
 
-        # step 4 of the TC_105
-        button = self.driver.find_element(By.XPATH, "//button[contains(text(),'Sign up')]").click()
+    def test_TC_105_signup_with_empty_username_and_password(self):
+        # Test signup with both fields empty
 
-        # expected result of the TC_105
-        expected_message = 'Please fill out Username and Password.'
+        self.home_page.open_signup_modal()
 
-        # wait for alert to appear
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+        # trying signup with empty values
+        self.signup_modal.signup("", "")
 
-        # get alert text
-        alert_text = alert.text
-        self.assertEqual(alert_text, expected_message)
+        # getting alert message
+        actual_alert = self.signup_modal.get_alert_text()
 
-# trying to sign up a user without entering a password
-    def test_TC_106_Sign_Up_With_Missing_Password(self):
+        # Validating expected message in the popup
+        self.assertEqual(
+            "Please fill out Username and Password.",
+            actual_alert
+        )
 
-        #  step 1 of the TC_106
-        element = self.driver.find_element(By.XPATH, '//*[@id="signin2"]').click()
-        sleep(5)
+    def test_TC_106_signup_with_missing_password(self):
+        # Test signup with username but no password
 
-        # step 2 of the TC_106
-        username_input = self.driver.find_element(By.ID, "sign-username")
-        username_input.send_keys("Andrzej")
+        self.home_page.open_signup_modal()
 
-        # step 3 of the TC_106
-        password_input = self.driver.find_element(By.ID, "sign-password")
-        password_input.send_keys("")
+        # Generating random username
+        random_username = self.fake.user_name()
 
-        # step 4 of the TC_106
-        button = self.driver.find_element(By.XPATH, "//button[contains(text(),'Sign up')]").click()
+        # Leave password empty
+        self.signup_modal.signup(random_username, "")
 
-        # expected result of the TC_106
-        expected_message = 'Please fill out Username and Password.'
-        # wait for alert to appear
+        # getting alert message
+        actual_alert = self.signup_modal.get_alert_text()
 
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+        # Validate expected message in the popup
+        self.assertEqual(
+            "Please fill out Username and Password.",
+            actual_alert
+        )
 
-        # get alert text
-        alert_text = alert.text
-        self.assertEqual(alert_text, expected_message)
+    def test_TC_107_signup_with_missing_username(self):
+        # Test signup with password but no username
 
-# trying to sign up a user without entering a Username
-    def test_TC_107_Sign_Up_With_Missing_Username(self):
+        self.home_page.open_signup_modal()
 
-        #  step 1 of the TC_107
-        element = self.driver.find_element(By.XPATH, '//*[@id="signin2"]').click()
-        sleep(5)
+        # Generating random password
+        random_password = self.fake.password()
 
-        # step 2 of the TC_107
-        username_input = self.driver.find_element(By.ID, "sign-username")
-        username_input.send_keys("")
+        # Leave username empty
+        self.signup_modal.signup("", random_password)
 
-        # step 3 of the TC_107
-        password_input = self.driver.find_element(By.ID, "sign-password")
-        password_input.send_keys("123456")
+        # getting alert message
+        actual_alert = self.signup_modal.get_alert_text()
 
-        # step 4 of the TC_107
-        button = self.driver.find_element(By.XPATH, "//button[contains(text(),'Sign up')]").click()
+        # Validating expected message in the popup
+        self.assertEqual(
+            "Please fill out Username and Password.",
+            actual_alert
+        )
 
-        # expected result of the TC_107
-        expected_message = 'Please fill out Username and Password.'
+    def tearDown(self):
+        # Runs after each test
 
-        # wait for alert to appear
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+        # Close browser
+        self.driver.quit()
 
-        # get alert text
-        alert_text = alert.text
-        self.assertEqual(alert_text, expected_message)
-
-# close browser after each test case
-def tearDown(self):
-    self.driver.quit()
-
-if __name__ == '__main__':
+# Allows running the test file directly
+if __name__ == "__main__":
     unittest.main()
-

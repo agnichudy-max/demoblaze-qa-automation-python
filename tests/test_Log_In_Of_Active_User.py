@@ -1,170 +1,116 @@
 import unittest
-from time import sleep
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+from faker import Faker
+from pages.home_page import HomePage
+from pages.login_modal import LoginModal
 
-# creating test setup
-class Test_Log_In_of_Active_User(unittest.TestCase):
+
+# This test class verifies login functionality for different scenarios:
+# - Valid login
+# - Non-existing user
+# - Wrong password
+# - Missing input
+# - Special character input
+class TestLoginOfActiveUser(unittest.TestCase):
+
+    # ===== TEST DATA =====
+    BASE_URL = "https://www.demoblaze.com/index.html"
+
+    # Valid credentials (existing user in the system)
+    VALID_USERNAME = "aga-chudy"
+    VALID_PASSWORD = "suntago"
+
     def setUp(self):
+        # Runs before each test
 
-        # 1. Open the home page
+        # Start browser
         self.driver = webdriver.Chrome()
         self.driver.maximize_window()
-        self.driver.get('https://www.demoblaze.com/index.html')
-        self.driver.implicitly_wait(15)
 
-# trying to log in a user with entering valid username and password
-    def test_TC_201_Log_In_With_Valid_Credentials(self):
+        # Initialize page objects
+        self.home_page = HomePage(self.driver)
+        self.login_modal = LoginModal(self.driver)
 
-        #  step 1 of the TC_201
-        element = self.driver.find_element(By.XPATH, '//*[@id="login2"]').click()
-        sleep(5)
+        # Faker is used to generate random test data
+        # This helps avoid hardcoding values and improves test coverage
+        self.fake = Faker()
 
-        # step 2 of the TC_201
-        username_input = self.driver.find_element(By.ID, "loginusername")
-        username_input.send_keys("aga-chudy")
+        # Open the application
+        self.home_page.open(self.BASE_URL)
 
-        # step 3 of the TC_201
-        password_input = self.driver.find_element(By.ID, "loginpassword")
-        password_input.send_keys("suntago")
+    # ===== TEST CASES =====
 
-        # step 4 of the TC_201
-        login_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//div[@id='logInModal']//button[normalize-space()='Log in']")))
-        login_button.click()
-        sleep(5)
+    def test_TC_201_login_with_valid_credentials(self):
+        # Test successful login with valid username and password
 
-        # expected result of the TC_201
-        expected_welcome_message = 'Welcome aga-chudy'
-        actual_welcome_message = self.driver.find_element(By.ID,'nameofuser').text
+        self.home_page.open_login_modal()
 
-        # comparing actual result with expected result of TC_201
-        self.assertEqual(expected_welcome_message, actual_welcome_message)
+        # Perform login using valid credentials
+        self.login_modal.login(self.VALID_USERNAME, self.VALID_PASSWORD)
 
-# trying to log in with non-existing user
-    def test_TC_202_Log_In_With_Non_Existing_User(self):
+        # Get welcome message after login
+        actual_message = self.home_page.get_welcome_message()
 
-        #  step 1 of the TC_202
-        element = self.driver.find_element(By.XPATH, '//*[@id="login2"]').click()
-        sleep(5)
+        # Verify correct welcome message is displayed
+        self.assertEqual(f"Welcome {self.VALID_USERNAME}", actual_message)
 
-        # step 2 of the TC_202
-        username_input = self.driver.find_element(By.ID, "loginusername")
-        username_input.send_keys("...,,,!!!")
+    def test_TC_202_login_with_non_existing_user(self):
+        # Test login attempt with a user that does not exist
 
-        # step 3 of the TC_202
-        password_input = self.driver.find_element(By.ID, "loginpassword")
-        password_input.send_keys("suntago")
+        self.home_page.open_login_modal()
 
-        # step 4 of the TC_202
-        login_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//div[@id='logInModal']//button[normalize-space()='Log in']")))
-        login_button.click()
-        sleep(5)
+        # Generate random credentials
+        random_username = self.fake.user_name()
+        random_password = self.fake.password()
 
-        # expected result of the TC_202
-        expected_message = 'User does not exist.'
+        self.login_modal.login(random_username, random_password)
 
-        # wait for alert to appear
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+        # Capture alert message
+        actual_alert = self.login_modal.get_alert_text()
 
-        # get alert text
-        alert_text = alert.text
-        self.assertEqual(alert_text, expected_message)
+        # Validate error message
+        self.assertEqual("User does not exist.", actual_alert)
 
-# trying to log in with invalid password
-    def test_TC_203_Log_In_With_Invalid_Password(self):
+    def test_TC_203_login_with_invalid_password(self):
+        # Test login with correct username but wrong password
 
-        #  step 1 of the TC_203
-        element = self.driver.find_element(By.XPATH, '//*[@id="login2"]').click()
-        sleep(5)
+        self.home_page.open_login_modal()
 
-        # step 2 of the TC_203
-        username_input = self.driver.find_element(By.ID, "loginusername")
-        username_input.send_keys("aga-chudy")
+        # Generate random password
+        random_password = self.fake.password()
 
-        # step 3 of the TC_203
-        password_input = self.driver.find_element(By.ID, "loginpassword")
-        password_input.send_keys("...,,,!!!")
+        self.login_modal.login(self.VALID_USERNAME, random_password)
 
-        # step 4 of the TC_203
-        login_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//div[@id='logInModal']//button[normalize-space()='Log in']")))
-        login_button.click()
-        sleep(5)
+        # Capture alert message
+        actual_alert = self.login_modal.get_alert_text()
 
-        # expected result of the TC_203
-        expected_message = 'Wrong password.'
+        # Validate error message
+        self.assertEqual("Wrong password.", actual_alert)
 
-        # wait for alert to appear
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+    def test_TC_204_login_with_missing_password(self):
+        # Test login when username is correct but password field is empty
 
-        # get alert text
-        alert_text = alert.text
-        self.assertEqual(alert_text, expected_message)
+        self.home_page.open_login_modal()
 
-# trying to log in with missing password
-    def test_TC_204_Log_In_With_Missing_Password(self):
+        self.login_modal.login(self.VALID_USERNAME, "")
 
-        #  step 1 of the TC_204
-        element = self.driver.find_element(By.XPATH, '//*[@id="login2"]').click()
-        sleep(5)
+        # Capture alert message
+        actual_alert = self.login_modal.get_alert_text()
 
-        # step 2 of the TC_204
-        username_input = self.driver.find_element(By.ID, "loginusername")
-        username_input.send_keys("aga-chudy")
+        # Validate validation message
+        self.assertEqual(
+            "Please fill out Username and Password.",
+            actual_alert
+        )
 
-        # step 3 of the TC_204
-        password_input = self.driver.find_element(By.ID, "loginpassword")
-        password_input.send_keys("")
 
-        # step 4 of the TC_204
-        login_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//div[@id='logInModal']//button[normalize-space()='Log in']")))
-        login_button.click()
-        sleep(5)
+    def tearDown(self):
+        # Runs after each test
 
-        # expected result of the TC_204
-        expected_message = 'Please fill out Username and Password.'
+        # Close browser
+        self.driver.quit()
 
-        # wait for alert to appear
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
 
-        # get alert text
-        alert_text = alert.text
-        self.assertEqual(alert_text, expected_message)
-
-# trying to log in with invalid password format
-    def test_TC_204_Log_In_With_Missing_Password(self):
-
-        #  step 1 of the TC_204
-        element = self.driver.find_element(By.XPATH, '//*[@id="login2"]').click()
-        sleep(5)
-
-        # step 2 of the TC_204
-        username_input = self.driver.find_element(By.ID, "loginusername")
-        username_input.send_keys("aga-chudy")
-
-        # step 3 of the TC_204
-        password_input = self.driver.find_element(By.ID, "loginpassword")
-        password_input.send_keys("")
-
-        # step 4 of the TC_204
-        login_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//div[@id='logInModal']//button[normalize-space()='Log in']")))
-        login_button.click()
-        sleep(5)
-
-        # expected result of the TC_204
-        expected_message = 'Please fill out Username and Password.'
-
-        # wait for alert to appear
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
-
-        # get alert text
-        alert_text = alert.text
-        self.assertEqual(alert_text, expected_message)
-
-# close browser after each test case
-def tearDown(self):
-    self.driver.quit()
-
-if __name__ == '__main__':
+# Allows running the test file directly
+if __name__ == "__main__":
     unittest.main()
