@@ -1,208 +1,121 @@
 import unittest
-from time import sleep
-from re import search
-import wait
 from selenium import webdriver
-from selenium.webdriver import Keys
-from selenium.webdriver.common import alert
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from pages.home_page import HomePage
+from pages.product_details_page import ProductDetailsPage
+from pages.cart_page import CartPage
+from pages.order_modal import OrderModal
 
-# creating test setup
-class Test_Payment_functionality(unittest.TestCase):
+
+# This test class verifies the full payment (purchase) flow:
+# - Opening the order form
+# - Validating form errors
+# - Completing a purchase successfully
+class TestPaymentFunctionality(unittest.TestCase):
+
+    # ===== TEST DATA =====
+    BASE_URL = "https://www.demoblaze.com/index.html"
+    CATEGORY = "Monitors"
+    PRODUCT = "Apple monitor 24"
+
     def setUp(self):
-        # 1. Open the home page
+        # Runs before each test
+
+        # Starting browser
         self.driver = webdriver.Chrome()
         self.driver.maximize_window()
-        self.driver.get('https://www.demoblaze.com/index.html')
-        self.driver.implicitly_wait(15)
 
-    def test_TC_601_Open_Order_Form_From_Cart(self):
-        # precondition from TC_503
-        monitor_link = self.driver.find_element(By.LINK_TEXT, "Monitors")
-        monitor_link.click()
-        sleep(2)
+        # Initializing page objects
+        self.home_page = HomePage(self.driver)
+        self.product_page = ProductDetailsPage(self.driver)
+        self.cart_page = CartPage(self.driver)
+        self.order_modal = OrderModal(self.driver)
 
-        # precondition from TC_503
-        apple_monitor_link = self.driver.find_element(By.LINK_TEXT, "Apple monitor 24")
-        apple_monitor_link.click()
-        sleep(2)
+        # Opening the application
+        self.home_page.open(self.BASE_URL)
 
-        # precondition from TC_503
-        add_to_card_button = self.driver.find_element(By.LINK_TEXT, "Add to cart")
-        add_to_card_button.click()
-        sleep(2)
+    # ===== HELPER METHOD =====
 
-        # precondition from TC_503
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+    def add_product_to_cart(self):
+        # Reusable precondition for multiple tests:
+        # Adds a product to the cart and navigates to cart page
 
-        # precondition from TC_503
-        alert.accept()
-        sleep(2)
+        # Step 1: Navigate to product
+        self.home_page.select_category(self.CATEGORY)
+        self.home_page.select_product(self.PRODUCT)
 
-        # precondition from TC_503
-        menu_cart_link = self.driver.find_element(By.ID, "cartur")
-        menu_cart_link.click()
+        # Step 2: Adding product to cart
+        self.product_page.add_to_cart()
 
-        sleep(2)
+        # Accept confirmation alert
+        self.product_page.accept_alert()
 
-        # deifinig prducts added to the cart page
-        products = self.driver.find_elements(By.CSS_SELECTOR, "#tbodyid tr")  # number of rows in the table
+        # Step 3: Go to cart page
+        self.home_page.open_cart()
 
-        # finding PLACE ORDER button
-        place_order_btn = self.driver.find_element(By.XPATH, "//button[text()='Place Order']")
+    # ===== TEST CASES =====
 
-        # step 1 of TC_601
-        place_order_btn.click()
-        sleep(2)
+    def test_TC_601_open_order_form_from_cart(self):
+        # Test that clicking "Place Order" opens the order modal
 
-        # checking if ORDER_FORM is visible
-        order_form = self.driver.find_element(By.XPATH, '//*[@id="orderModal"]')
+        self.add_product_to_cart()
 
-        # Assertions
-        assert order_form.is_displayed()
+        # Click "Place Order"
+        self.cart_page.click_place_order()
 
-    def test_TC_602_Validate_Empty_Purchase_Form_Error_Message(self):
+        # Verifying that the modal is visible
+        self.assertTrue(self.order_modal.is_visible())
 
-        # precondition from TC_503
-        monitor_link = self.driver.find_element(By.LINK_TEXT, "Monitors")
-        monitor_link.click()
-        sleep(2)
+    def test_TC_602_validate_empty_purchase_form_error_message(self):
+        # Testing validation when submitting empty order form
 
-        # precondition from TC_503
-        apple_monitor_link = self.driver.find_element(By.LINK_TEXT, "Apple monitor 24")
-        apple_monitor_link.click()
-        sleep(2)
+        self.add_product_to_cart()
 
-        # precondition from TC_503
-        add_to_card_button = self.driver.find_element(By.LINK_TEXT, "Add to cart")
-        add_to_card_button.click()
-        sleep(2)
+        self.cart_page.click_place_order()
 
-        # precondition from TC_503
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+        # Click purchase without filling required fields
+        self.order_modal.click_purchase()
 
-        # precondition from TC_503
-        alert.accept()
-        sleep(2)
+        # getting popup message
+        alert_text = self.order_modal.get_alert_text()
 
-        # precondition from TC_503
-        menu_cart_link = self.driver.find_element(By.ID, "cartur")
-        menu_cart_link.click()
+        # Validating expected error message
+        self.assertEqual("Please fill out Name and Creditcard.", alert_text)
 
-        sleep(2)
+    def test_TC_603_complete_purchase_with_name_and_card(self):
+        # Testing successful purchase flow
 
-        # deifinig prducts added to the cart page
-        products = self.driver.find_elements(By.CSS_SELECTOR, "#tbodyid tr")  # number of rows in the table
+        self.add_product_to_cart()
 
-        # finding PLACE ORDER button
-        place_order_btn = self.driver.find_element(By.XPATH, "//button[text()='Place Order']")
+        # Getting total price from cart page
+        cart_total = self.cart_page.get_total_price()
 
-        # step 1 of TC_602
-        place_order_btn.click()
-        sleep(2)
+        # Opening order modal
+        self.cart_page.click_place_order()
 
-        # step 4 of TC_602
-        # finding PURCHASE button
-        purchase_btn = self.driver.find_element(By.XPATH, "//button[text()='Purchase']")
+        # Verifying total price inside modal matches cart total
+        modal_total = self.order_modal.get_total_price()
+        self.assertEqual(f"Total: {cart_total}", modal_total)
 
-        # click PURCHASE button
-        purchase_btn.click()
-        sleep(2)
+        # Fill in purchase form
+        self.order_modal.enter_name("aga-chudy")
+        self.order_modal.enter_card("123456")
 
-        # expected result of the TC_602
-        expected_message = 'Please fill out Name and Creditcard.'
+        # Submit purchase
+        self.order_modal.click_purchase()
 
-        # wait for alert to appear
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+        # Capture success popup text
+        popup_text = self.order_modal.get_success_popup_text()
 
-        # get alert text
-        alert_text = alert.text
-        self.assertEqual(alert_text, expected_message)
+        # Validate that correct amount appears in confirmation
+        self.assertIn(f"Amount: {cart_total} USD", popup_text)
 
-    def test_TC_603_Complete_Purchase_With_Name_And_Card(self):
-        # precondition from TC_503
-        monitor_link = self.driver.find_element(By.LINK_TEXT, "Monitors")
-        monitor_link.click()
-        sleep(2)
+    def tearDown(self):
+        # Runs after each test
 
-        # precondition from TC_503
-        apple_monitor_link = self.driver.find_element(By.LINK_TEXT, "Apple monitor 24")
-        apple_monitor_link.click()
-        sleep(2)
-
-        # precondition from TC_503
-        add_to_card_button = self.driver.find_element(By.LINK_TEXT, "Add to cart")
-        add_to_card_button.click()
-        sleep(2)
-
-        # precondition from TC_503
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
-
-        # precondition from TC_503
-        alert.accept()
-        sleep(2)
-
-        # precondition from TC_503
-        menu_cart_link = self.driver.find_element(By.ID, "cartur")
-        menu_cart_link.click()
-
-        sleep(2)
-
-        # extract total price from the cart page
-        cart_total_price = self.driver.find_element(By.ID, "totalp").text
-        expected_cart_total_price = '400'
-
-        # asserting that expected value equals the actual value
-        self.assertEqual(cart_total_price, expected_cart_total_price)
-
-        # deifinig prducts added to the cart page
-        products = self.driver.find_elements(By.CSS_SELECTOR, "#tbodyid tr")  # number of rows in the table
-
-        # finding PLACE ORDER button
-        place_order_btn = self.driver.find_element(By.XPATH, "//button[text()='Place Order']")
-
-        # step 1 of TC_602
-        place_order_btn.click()
-        sleep(2)
-
-        # extracting total price from purchase modal window
-        purchase_modal_window_price = self.driver.find_element(By.ID, "totalm").text
-        expected_purchase_modal_window_price = "Total: " + str(int(cart_total_price))
-
-        # asserting that price is modal window equals cart total price
-        self.assertEqual(purchase_modal_window_price, expected_purchase_modal_window_price)
-
-        # step 2 of TC_603
-        name_input = self.driver.find_element(By.ID, "name")
-        name_input.send_keys("aga-chudy")
-
-        # step 3 of TC_603
-        credit_card_input = self.driver.find_element(By.ID, "card")
-        credit_card_input.send_keys("123456")
-
-        # finding PURCHASE button
-        purchase_btn = self.driver.find_element(By.XPATH, "//button[text()='Purchase']")
-
-        # step 4 of TC_603 click PURCHASE button
-        purchase_btn.click()
-        sleep(5)
-
-        # finding purchase confirmation window
-        success_popup = WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, ".sweet-alert.showSweetAlert.visible"))
-        )
-        # extracting text from popup
-        popup_text = success_popup.text
-
-        # validating that paid price from confirmation window equals total price from cart page
-        assert "Amount: 400 USD" in popup_text
+        # Close browser
+        self.driver.quit()
 
 
-
-
-
-
-
-
+# Allows running the test file directly
+if __name__ == "__main__":
+    unittest.main()

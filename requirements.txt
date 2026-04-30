@@ -1,4 +1,5 @@
 wait
 selenium
+faker
 pytest
 webdriver-manager

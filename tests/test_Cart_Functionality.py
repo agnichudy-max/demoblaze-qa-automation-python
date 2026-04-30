@@ -1,124 +1,101 @@
 import unittest
-from time import sleep
 from selenium import webdriver
-from selenium.webdriver.common import alert
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from pages.home_page import HomePage
+from pages.product_details_page import ProductDetailsPage
+from pages.cart_page import CartPage
 
-# creating test setup
-class Test_Cart_functionality(unittest.TestCase):
+
+# This test class verifies cart-related functionality:
+# - Viewing product details
+# - Adding a product to the cart
+# - Verifying cart contents
+class TestCartFunctionality(unittest.TestCase):
+
+    # ===== TEST DATA =====
+    BASE_URL = "https://www.demoblaze.com/index.html"
+    CATEGORY = "Monitors"
+    PRODUCT = "Apple monitor 24"
+
     def setUp(self):
-        # 1. Open the home page
+        # Runs before each test
+
+        # Starting browser
         self.driver = webdriver.Chrome()
         self.driver.maximize_window()
-        self.driver.get('https://www.demoblaze.com/index.html')
-        self.driver.implicitly_wait(15)
 
-    def test_TC_501_View_Product_Details_Page_Load(self):
-        #  step 1 of the TC_501
-        monitor_link = self.driver.find_element(By.LINK_TEXT, "Monitors")
-        monitor_link.click()
-        sleep (5)
+        # Initializing page objects (Page Object Model)
+        self.home_page = HomePage(self.driver)
+        self.product_details_page = ProductDetailsPage(self.driver)
+        self.cart_page = CartPage(self.driver)
 
-        #  step 2 of the TC_501
-        apple_monitor_link = self.driver.find_element(By.LINK_TEXT, "Apple monitor 24")
-        apple_monitor_link.click()
-        sleep (5)
+        # Opening the application
+        self.home_page.open(self.BASE_URL)
 
-        # verifying that we see the previously selected monitor
-        monitor_name = self.driver.find_elements(By.CSS_SELECTOR, "#tbodyid h2")
+    def open_apple_monitor_details_page(self):
+        # Helper method to reduce duplicated steps in tests
 
-        # extracting the monitor name
-        actual_result = monitor_name[0].text
-        expected_result = "Apple monitor 24"
+        # Step 1: Selecting category (e.g., "Monitors")
+        self.home_page.select_category(self.CATEGORY)
 
-        # comparing to expected name
-        self.assertEqual(actual_result, expected_result)
+        # Step 2: Selecting specific product
+        self.home_page.select_product(self.PRODUCT)
 
-        # verifying that ADD TO CART button is visible
-        add_to_card_button = self.driver.find_element(By.LINK_TEXT, "Add to cart")
-        add_to_card_button_text = add_to_card_button.text
-        add_to_card_button_expected = "Add to cart"
+    # ===== TEST CASES =====
 
-        # Assertion
-        self.assertEqual(add_to_card_button_expected, add_to_card_button.text)
+    def test_TC_501_view_product_details_page_load(self):
+        # Testing that product details page loads correctly
 
-    def test_TC_502_Add_Product_To_Cart_Popup_Confirmation(self):
+        self.open_apple_monitor_details_page()
 
-        # step 1 of the TC_502
-        monitor_link = self.driver.find_element(By.LINK_TEXT, "Monitors")
-        monitor_link.click()
-        sleep(5)
+        # Getting actual values from the page
+        actual_product_name = self.product_details_page.get_product_name()
+        actual_button_text = self.product_details_page.get_add_to_cart_button_text()
 
-        #  step 2 of the TC_502
-        apple_monitor_link = self.driver.find_element(By.LINK_TEXT, "Apple monitor 24")
-        apple_monitor_link.click()
-        sleep(5)
+        # Validating expected values
+        self.assertEqual(self.PRODUCT, actual_product_name)
+        self.assertEqual("Add to cart", actual_button_text)
 
-        # step 3 of the TC_502
-        add_to_card_button = self.driver.find_element(By.LINK_TEXT, "Add to cart")
-        add_to_card_button.click()
-        sleep(5)
+    def test_TC_502_add_product_to_cart_popup_confirmation(self):
+        # Testing that adding a product triggers a confirmation alert
 
-# expected result of the TC_502
-        expected_message = 'Product added'
+        self.open_apple_monitor_details_page()
 
-        # wait for Pop up to appear
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+        # Click "Add to cart"
+        self.product_details_page.add_to_cart()
 
-        # get Pop up text
-        alert_text = alert.text
-        self.assertEqual(alert_text, expected_message)
+        # getting alert text (browser popup)
+        actual_alert = self.product_details_page.get_alert_text()
 
-    def test_TC_503_View_Cart_With_One_Added_Product(self):
+        # Validate popup message
+        self.assertEqual("Product added", actual_alert)
 
-        # step 1 of the TC_503
-        monitor_link = self.driver.find_element(By.LINK_TEXT, "Monitors")
-        monitor_link.click()
-        sleep(2)
+    def test_TC_503_view_cart_with_one_added_product(self):
+        # Testing that the cart contains the added product
 
-        #  step 2 of the TC_503
-        apple_monitor_link = self.driver.find_element(By.LINK_TEXT, "Apple monitor 24")
-        apple_monitor_link.click()
-        sleep(2)
+        self.open_apple_monitor_details_page()
 
-        # step 3 of the TC_503
-        add_to_card_button = self.driver.find_element(By.LINK_TEXT, "Add to cart")
-        add_to_card_button.click()
-        sleep(2)
+        # Adding product to a cart
+        self.product_details_page.add_to_cart()
 
-        # define element that contains the pop-up
-        alert = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+        # Accepting the confirmation alert (click "OK")
+        self.product_details_page.accept_alert()
 
-        # step 4 of the TC_503 (clicks OK)
-        alert.accept()
-        sleep(2)
+        # Navigating to cart page
+        self.home_page.open_cart()
 
-        # step 5 of the TC_503
-        menu_cart_link = self.driver.find_element(By.ID, "cartur")
-        menu_cart_link.click()
+        # Verify:
+        # - Exactly 1 product is in the cart
+        # - "Place Order" button is visible
+        self.assertEqual(1, self.cart_page.get_number_of_products())
+        self.assertTrue(self.cart_page.is_place_order_button_visible())
 
-        sleep(2)
-
-        # deifinig prducts added to the cart page
-        products = self.driver.find_elements(By.CSS_SELECTOR, "#tbodyid tr") #number of rows in the table
-
-        # checking if PLACE ORDER button is visible
-        place_order_btn = self.driver.find_element(By.XPATH, "//button[text()='Place Order']")
-
-        # Assertions
-        self.assertEqual(len(products), 1)
-        assert place_order_btn.is_displayed()
-
-     # close browser after each test case
     def tearDown(self):
+        # Running after each test
+
+        # Closing browser
         self.driver.quit()
 
-    if __name__ == '__main__':
-        unittest.main()
 
-
-
-
-
+# Allows running the test file directly
+if __name__ == "__main__":
+    unittest.main()

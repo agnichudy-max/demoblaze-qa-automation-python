@@ -1,62 +1,73 @@
-import time
 import unittest
 from selenium import webdriver
-from selenium.webdriver.common.by import By
+from pages.home_page import HomePage
 
-class Test_Displaying_Category_Functionality(unittest.TestCase):
+# This test class verifies category display functionality:
+# - Correct products are shown when selecting a category
+# - Pagination buttons behave correctly based on product count
+class TestDisplayingCategoryFunctionality(unittest.TestCase):
+
+    # ===== TEST DATA =====
+    # capital letters it is a constant
+    BASE_URL = "https://www.demoblaze.com/index.html"
+    CATEGORY = "Monitors"
+
+    # Expected products in the "Monitors" category, as a list []
+    EXPECTED_MONITORS = [
+        "Apple monitor 24",
+        "ASUS Full HD",
+    ]
+
     def setUp(self):
+        # Runs before each test
 
-        # 1. Open the home page
+        # Starting browser
         self.driver = webdriver.Chrome()
         self.driver.maximize_window()
-        self.driver.get('https://www.demoblaze.com/index.html')
-        self.driver.implicitly_wait(15)
 
-# checking if MONITORS button opens monitors category
-    def test_TC_401_Open_Monitors_Category_Page(self):
+        # Initializing HomePage object
+        self.home_page = HomePage(self.driver)
 
-        #  step 1 of the TC_401
-        monitor_link = self.driver.find_element(By.LINK_TEXT, "Monitors")
-        monitor_link.click()
+        # Opening the application
+        self.home_page.open(self.BASE_URL)
 
-        # Waiting for items to load
-        time.sleep(2)
+    # ===== TEST CASES =====
 
-        # Get all product titles
-        products = self.driver.find_elements(By.CSS_SELECTOR, ".card-title a")
+    def test_TC_401_open_monitors_category_page(self):
+        # Test that selecting the "Monitors" category shows correct products
 
-        # Extract text
-        product_names = [p.text.strip() for p in products]
+        # Clicking the category
+        self.home_page.select_category(self.CATEGORY)
 
-        # Expected products
-        expected = ["Apple monitor 24", "ASUS Full HD"]
+        # Getting list of visible product names
+        actual_product_names = self.home_page.get_visible_product_names()
 
-        # Assertions
-        assert len(product_names) == 2, f"Expected 2 monitors, got {len(product_names)}"
-        assert set(product_names) == set(expected), f"Unexpected products: {product_names}"
+        # Validating number of products displayed
+        self.assertEqual(2, len(actual_product_names))
 
-    # checking if Pagination (NEXT PREVIOUS) are not visible
-    def test_TC_402_Verify_Pagination_Buttons_Not_Visible_For_Small_Product_List(self):
+        # Validating that the correct products are shown (order doesn't matter)
+        # Using set() ignores ordering differences
+        self.assertEqual(set(self.EXPECTED_MONITORS), set(actual_product_names))
 
-            #  step 1 of the TC_402
-            monitor_link = self.driver.find_element(By.LINK_TEXT, "Monitors")
-            monitor_link.click()
+    def test_TC_402_verify_pagination_buttons_not_visible_for_small_product_list(self):
+        # Test that pagination buttons are hidden when few products exist
 
-            # Try to locate Previous button
-            previous_buttons = self.driver.find_elements(By.XPATH, "//button[contains(text(),'Previous')]")
+        # Selecting category
+        self.home_page.select_category(self.CATEGORY)
 
-            # Try to locate Next button
-            next_buttons = self.driver.find_elements(By.XPATH, "//button[contains(text(),'Next')]")
+        # Verifying "Previous" button is not visible
+        self.assertFalse(self.home_page.is_previous_button_visible())
 
-            # If buttons exist, verify they are not visible
-            if previous_buttons:
-                assert not previous_buttons[0].is_displayed(), "Previous button is visible, but it should not be."
-            if next_buttons:
-                assert not next_buttons[0].is_displayed(), "Next button is visible, but it should not be."
+        # Verifying "Next" button is not visible
+        self.assertFalse(self.home_page.is_next_button_visible())
 
-    # close browser after each test case
     def tearDown(self):
+        # Runs after each test
+
+        # Close browser
         self.driver.quit()
 
-    if __name__ == '__main__':
-        unittest.main()
+
+# Allows running this file directly
+if __name__ == "__main__":
+    unittest.main()
