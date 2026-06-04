@@ -2,9 +2,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from pages.base_page import BasePage
 
-
 # OrderModal represents the purchase/order popup shown when placing an order.
-# Like other page objects, it inherits shared functionality from BasePage.
+# It inherits functionality from BasePage.
 class OrderModal(BasePage):
 
     # ===== LOCATORS =====
@@ -81,5 +80,4 @@ class OrderModal(BasePage):
         )
 
         # Returns the full text shown in the popup
-        # (often includes confirmation message, order ID, etc.)
         return popup.text

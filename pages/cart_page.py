@@ -3,13 +3,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from pages.base_page import BasePage
 
 
-# CartPage represents the shopping cart page in your application.
-# It inherits from BasePage, meaning it reuses shared functionality
-# like driver setup and waiting logic.
+# CartPage represents the shopping cart page.
+# It inherits from BasePage.
 class CartPage(BasePage):
 
-    # Locators: These define how Selenium finds elements on the page.
-    # Using tuples (By.<METHOD>, "selector") is a standard pattern.
+    # Locators: Define how Selenium finds elements on the page.
+    # Using tuples (By.<METHOD>, "selector").
 
     # Finds all rows (<tr>) inside the cart table body (#tbodyid)
     PRODUCT_ROWS = (By.CSS_SELECTOR, "#tbodyid tr")

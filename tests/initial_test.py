@@ -5,7 +5,7 @@ from pages.home_page import HomePage
 
 
 # This is a test class using Python's built-in unittest framework.
-# Each method that starts with "test_" will be executed as a test case.
+# Each method that starts with "test_" is executed as a test case.
 class TestPageTitle(unittest.TestCase):
 
     # Base URL of the application under test
@@ -14,7 +14,7 @@ class TestPageTitle(unittest.TestCase):
     def setUp(self):
         # setUp() runs before each test method
 
-        # Initialize the browser (Chrome in this case)
+        # Initialize the browser (Chrome)
         self.driver = webdriver.Chrome()
 
         # Maximize the browser window (optional, but helps avoid UI issues)

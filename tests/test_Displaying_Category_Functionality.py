@@ -67,7 +67,6 @@ class TestDisplayingCategoryFunctionality(unittest.TestCase):
         # Close browser
         self.driver.quit()
 
-
 # Allows running this file directly
 if __name__ == "__main__":
     unittest.main()

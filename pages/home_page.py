@@ -2,8 +2,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from pages.base_page import BasePage
 
-
-# HomePage represents the main landing page of the application.
+# HomePage represents the main landing page.
 # It inherits from BasePage, so it already has access to:
 # - self.driver (browser control)
 # - self.wait (explicit wait handling)
@@ -26,25 +25,23 @@ class HomePage(BasePage):
     NEXT_BUTTON = (By.XPATH, "//button[contains(text(),'Next')]")
 
     # Locator for the welcome message shown after successful login
-    # Example HTML: <a id="nameofuser">Welcome username</a>
     WELCOME_MESSAGE = (By.ID, "nameofuser")
 
     # ===== ACTION METHODS =====
 
     def get_welcome_message(self):
-        # Wait until the welcome message element becomes visible on the page
-        # This is important because the UI updates after login are asynchronous
+        # Waiting until the welcome message element becomes visible on the page
         element = self.wait.until(
             EC.visibility_of_element_located(self.WELCOME_MESSAGE)
         )
 
         # Return the text content of the element
-        # Example return value: "Welcome aga-chudy"
+        # Return value: "Welcome aga-chudy"
         return element.text
 
     def open_login_modal(self):
-        # Waits until the login link is clickable, then clicks it.
-        # This typically opens a login popup/modal.
+        # Waiting until the login link is clickable, then clicking it.
+        # A login popup/modal opens.
         self.wait.until(EC.element_to_be_clickable(self.LOGIN_LINK)).click()
 
     def open_signup_modal(self):
@@ -52,11 +49,11 @@ class HomePage(BasePage):
         self.wait.until(EC.element_to_be_clickable(self.SIGNUP_LINK)).click()
 
     def open_cart(self):
-        # Navigates to the cart page by clicking the cart link.
+        # Navigating to the cart page by clicking the cart link.
         self.wait.until(EC.element_to_be_clickable(self.CART_LINK)).click()
 
     def select_category(self, category_name):
-        # Clicks a category by its visible text (e.g., "Phones", "Laptops").
+        # Clicking a category by its visible text (Example "Phones", "Laptops").
         # By.LINK_TEXT finds <a> elements with matching text.
         self.wait.until(
             EC.element_to_be_clickable((By.LINK_TEXT, category_name))

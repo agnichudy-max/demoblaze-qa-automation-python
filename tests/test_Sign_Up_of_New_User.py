@@ -4,7 +4,6 @@ from faker import Faker
 from pages.home_page import HomePage
 from pages.signup_modal import SignUpModal
 
-
 # This test class verifies signup validation scenarios:
 # - Empty input
 # - Missing username

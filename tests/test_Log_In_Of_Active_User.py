@@ -23,11 +23,11 @@ class TestLoginOfActiveUser(unittest.TestCase):
     def setUp(self):
         # Runs before each test
 
-        # Start browser
+        # Starting browser
         self.driver = webdriver.Chrome()
         self.driver.maximize_window()
 
-        # Initialize page objects
+        # Initializing page objects
         self.home_page = HomePage(self.driver)
         self.login_modal = LoginModal(self.driver)
 
@@ -35,13 +35,13 @@ class TestLoginOfActiveUser(unittest.TestCase):
         # This helps avoid hardcoding values and improves test coverage
         self.fake = Faker()
 
-        # Open the application
+        # Opening the application
         self.home_page.open(self.BASE_URL)
 
     # ===== TEST CASES =====
 
     def test_TC_201_login_with_valid_credentials(self):
-        # Test successful login with valid username and password
+        # Testing successful login with valid username and password
 
         self.home_page.open_login_modal()
 
@@ -51,53 +51,53 @@ class TestLoginOfActiveUser(unittest.TestCase):
         # Get welcome message after login
         actual_message = self.home_page.get_welcome_message()
 
-        # Verify correct welcome message is displayed
+        # Verifying correct welcome message is displayed
         self.assertEqual(f"Welcome {self.VALID_USERNAME}", actual_message)
 
     def test_TC_202_login_with_non_existing_user(self):
-        # Test login attempt with a user that does not exist
+        # Testing login attempt with a user that does not exist
 
         self.home_page.open_login_modal()
 
-        # Generate random credentials
+        # Generating random credentials
         random_username = self.fake.user_name()
         random_password = self.fake.password()
 
         self.login_modal.login(random_username, random_password)
 
-        # Capture alert message
+        # Capturing alert message
         actual_alert = self.login_modal.get_alert_text()
 
-        # Validate error message
+        # Validating error message
         self.assertEqual("User does not exist.", actual_alert)
 
     def test_TC_203_login_with_invalid_password(self):
-        # Test login with correct username but wrong password
+        # Testing login with correct username but wrong password
 
         self.home_page.open_login_modal()
 
-        # Generate random password
+        # Generating random password
         random_password = self.fake.password()
 
         self.login_modal.login(self.VALID_USERNAME, random_password)
 
-        # Capture alert message
+        # Capturing alert message
         actual_alert = self.login_modal.get_alert_text()
 
-        # Validate error message
+        # Validating error message
         self.assertEqual("Wrong password.", actual_alert)
 
     def test_TC_204_login_with_missing_password(self):
-        # Test login when username is correct but password field is empty
+        # Testing login when username is correct but password field is empty
 
         self.home_page.open_login_modal()
 
         self.login_modal.login(self.VALID_USERNAME, "")
 
-        # Capture alert message
+        # Capturing alert message
         actual_alert = self.login_modal.get_alert_text()
 
-        # Validate validation message
+        # Validating validation message
         self.assertEqual(
             "Please fill out Username and Password.",
             actual_alert

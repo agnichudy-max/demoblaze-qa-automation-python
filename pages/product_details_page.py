@@ -2,14 +2,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from pages.base_page import BasePage
 
-
 # ProductDetailsPage represents the page shown when a user clicks on a product.
-# It typically displays product info (name, price, description) and actions (like "Add to cart").
+# It displays product info (name, price) and actions (like "Add to cart").
 class ProductDetailsPage(BasePage):
 
     # ===== LOCATORS =====
 
-    # The product name (usually a heading inside the product details section)
+    # The product name (a heading inside the product details section)
     PRODUCT_NAME = (By.CSS_SELECTOR, "#tbodyid h2")
 
     # The "Add to cart" button (found by its visible link text)

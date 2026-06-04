@@ -37,19 +37,19 @@ class TestPaymentFunctionality(unittest.TestCase):
 
     def add_product_to_cart(self):
         # Reusable precondition for multiple tests:
-        # Adds a product to the cart and navigates to cart page
+        # Adding a product to the cart and navigates to cart page
 
-        # Step 1: Navigate to product
+        # Step 1: Navigating to product
         self.home_page.select_category(self.CATEGORY)
         self.home_page.select_product(self.PRODUCT)
 
         # Step 2: Adding product to cart
         self.product_page.add_to_cart()
 
-        # Accept confirmation alert
+        # Accepting confirmation alert
         self.product_page.accept_alert()
 
-        # Step 3: Go to cart page
+        # Step 3: Going to cart page
         self.home_page.open_cart()
 
     # ===== TEST CASES =====
@@ -72,10 +72,10 @@ class TestPaymentFunctionality(unittest.TestCase):
 
         self.cart_page.click_place_order()
 
-        # Click purchase without filling required fields
+        # Clicking purchase without filling required fields
         self.order_modal.click_purchase()
 
-        # getting popup message
+        # Getting popup message
         alert_text = self.order_modal.get_alert_text()
 
         # Validating expected error message
@@ -96,23 +96,23 @@ class TestPaymentFunctionality(unittest.TestCase):
         modal_total = self.order_modal.get_total_price()
         self.assertEqual(f"Total: {cart_total}", modal_total)
 
-        # Fill in purchase form
+        # Filling in purchase form
         self.order_modal.enter_name("aga-chudy")
         self.order_modal.enter_card("123456")
 
-        # Submit purchase
+        # Submitting purchase
         self.order_modal.click_purchase()
 
-        # Capture success popup text
+        # Capturing success popup text
         popup_text = self.order_modal.get_success_popup_text()
 
-        # Validate that correct amount appears in confirmation
+        # Validating that correct amount appears in confirmation
         self.assertIn(f"Amount: {cart_total} USD", popup_text)
 
     def tearDown(self):
         # Runs after each test
 
-        # Close browser
+        # Closing browser
         self.driver.quit()
 
 

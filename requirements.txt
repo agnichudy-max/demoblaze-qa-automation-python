@@ -1,5 +1,6 @@
-wait
 selenium
-faker
 pytest
-webdriver-manager
+faker
+allure-pytest
+
+allure-python-commons
