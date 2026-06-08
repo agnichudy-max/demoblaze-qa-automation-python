@@ -1,72 +1,100 @@
-import unittest
-from selenium import webdriver
+# Import Allure reporting library
+#
+# Used to organize tests inside Allure reports
+import allure
+
+
+# Import BASE_URL from config file
+#
+# Keeps configuration centralized
+from config.config import BASE_URL
+
+
+# Import HomePage Page Object
+#
+# Page Objects contain reusable UI interaction methods
 from pages.home_page import HomePage
 
-# This test class verifies category display functionality:
-# - Correct products are shown when selecting a category
-# - Pagination buttons behave correctly based on product count
-class TestDisplayingCategoryFunctionality(unittest.TestCase):
 
-    # ===== TEST DATA =====
-    # capital letters it is a constant
-    BASE_URL = "https://www.demoblaze.com/index.html"
+# Test class
+#
+# Groups all category-related tests together
+class TestDisplayingCategoryFunctionality:
+
+    # Product category used in tests
     CATEGORY = "Monitors"
 
-    # Expected products in the "Monitors" category, as a list []
+    # Expected products visible in Monitors category
+    #
+    # These are the expected results used for validation
     EXPECTED_MONITORS = [
         "Apple monitor 24",
-        "ASUS Full HD",
+        "ASUS Full HD"
     ]
 
-    def setUp(self):
-        # Runs before each test
+    # Allure report hierarchy
+    #
+    # Epic   = large business area
+    # Feature = specific functionality
+    # Story   = exact user scenario
+    @allure.epic("Product Category")
+    @allure.feature("Category Monitor")
+    @allure.story("Show page")
 
-        # Starting browser
-        self.driver = webdriver.Chrome()
-        self.driver.maximize_window()
+    # Test case
+    #
+    # Verifies:
+    # - Monitors category page opens correctly
+    # - Correct products are displayed
+    def test_TC_401_open_monitors_category_page(self, driver):
 
-        # Initializing HomePage object
-        self.home_page = HomePage(self.driver)
+        # Create HomePage object
+        #
+        # Gives access to homepage methods
+        home_page = HomePage(driver)
 
-        # Opening the application
-        self.home_page.open(self.BASE_URL)
+        # Open website
+        home_page.open_url(BASE_URL)
 
-    # ===== TEST CASES =====
+        # Click "Monitors" category
+        home_page.select_category(self.CATEGORY)
 
-    def test_TC_401_open_monitors_category_page(self):
-        # Test that selecting the "Monitors" category shows correct products
+        # Retrieve visible product names from page
+        actual_products = home_page.get_visible_product_names()
 
-        # Clicking the category
-        self.home_page.select_category(self.CATEGORY)
+        # Verify exactly 2 products are displayed
+        assert len(actual_products) == 2
 
-        # Getting list of visible product names
-        actual_product_names = self.home_page.get_visible_product_names()
+        # Verify displayed products match expected products
+        #
+        # set() ignores ordering differences
+        #
+        # Example:
+        # ["A", "B"] == ["B", "A"]
+        assert set(actual_products) == set(self.EXPECTED_MONITORS)
 
-        # Validating number of products displayed
-        self.assertEqual(2, len(actual_product_names))
+    # Allure report hierarchy
+    @allure.epic("Product Category")
+    @allure.feature("Category Monitor")
+    @allure.story("Pagination button visible")
 
-        # Validating that the correct products are shown (order doesn't matter)
-        # Using set() ignores ordering differences
-        self.assertEqual(set(self.EXPECTED_MONITORS), set(actual_product_names))
+    # Test case
+    #
+    # Verifies pagination buttons are visible
+    # in the Monitors category page
+    def test_TC_402_verify_pagination_buttons_visible(self, driver):
 
-    def test_TC_402_verify_pagination_buttons_not_visible_for_small_product_list(self):
-        # Test that pagination buttons are hidden when few products exist
+        # Create HomePage object
+        home_page = HomePage(driver)
 
-        # Selecting category
-        self.home_page.select_category(self.CATEGORY)
+        # Open website
+        home_page.open_url(BASE_URL)
 
-        # Verifying "Previous" button is not visible
-        self.assertFalse(self.home_page.is_previous_button_visible())
+        # Open Monitors category
+        home_page.select_category(self.CATEGORY)
 
-        # Verifying "Next" button is not visible
-        self.assertFalse(self.home_page.is_next_button_visible())
+        # Verify Previous button is visible
+        assert home_page.is_previous_button_visible()
 
-    def tearDown(self):
-        # Runs after each test
-
-        # Close browser
-        self.driver.quit()
-
-# Allows running this file directly
-if __name__ == "__main__":
-    unittest.main()
+        # Verify Next button is visible
+        assert home_page.is_next_button_visible()

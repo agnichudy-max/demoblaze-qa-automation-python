@@ -1,6 +1,5 @@
+allure-python-commons
 selenium
 pytest
 faker
 allure-pytest
-
-allure-python-commons

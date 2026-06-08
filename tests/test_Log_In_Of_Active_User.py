@@ -1,116 +1,143 @@
-import unittest
-from selenium import webdriver
+# Importing Allure reporting library to organize tests inside Allure reports
+import allure
+
+# Importing pytest framework for:
+#  running tests
+#  parametrization
+#  fixtures
+import pytest
+
+# Importing Faker library, it generates random fake test data
 from faker import Faker
+
+# Importing base URL from config file, it keeps configuration centralized
+from config.config import BASE_URL
+
+# Importing Page Objects, it contains reusable browser interaction methods
 from pages.home_page import HomePage
 from pages.login_modal import LoginModal
 
+# Creating Faker object (Used later to generate random test data)
+fake = Faker()
 
-# This test class verifies login functionality for different scenarios:
-# - Valid login
-# - Non-existing user
-# - Wrong password
-# - Missing input
-# - Special character input
-class TestLoginOfActiveUser(unittest.TestCase):
+# Test class, it groups all login-related tests together
+class TestLogin:
 
-    # ===== TEST DATA =====
-    BASE_URL = "https://www.demoblaze.com/index.html"
-
-    # Valid credentials (existing user in the system)
+    # Valid username used for positive login test
     VALID_USERNAME = "aga-chudy"
+
+    # Valid password used for positive login test
     VALID_PASSWORD = "suntago"
 
-    def setUp(self):
-        # Runs before each test
+    # Allure report hierarchy
+    # Epic   = major business area
+    # Feature = specific functionality
+    # Story   = exact user scenario
+    @allure.epic("Authentication")
+    @allure.feature("Login")
+    @allure.story("Valid Login")
 
-        # Starting browser
-        self.driver = webdriver.Chrome()
-        self.driver.maximize_window()
+    # Test case to verify if user can log in with valid credentials
+    def test_TC_201_login_with_valid_credentials(self, driver):
 
-        # Initializing page objects
-        self.home_page = HomePage(self.driver)
-        self.login_modal = LoginModal(self.driver)
+        # Create HomePage object
+        # Gives access to homepage methods
+        home_page = HomePage(driver)
 
-        # Faker is used to generate random test data
-        # This helps avoid hardcoding values and improves test coverage
-        self.fake = Faker()
+        # Create LoginModal object
+        # Gives access to login modal methods
+        login_modal = LoginModal(driver)
 
-        # Opening the application
-        self.home_page.open(self.BASE_URL)
+        # Open website
+        home_page.open_url(BASE_URL)
 
-    # ===== TEST CASES =====
+        # Opening login popup/modal
+        home_page.open_login_modal()
 
-    def test_TC_201_login_with_valid_credentials(self):
-        # Testing successful login with valid username and password
-
-        self.home_page.open_login_modal()
-
-        # Perform login using valid credentials
-        self.login_modal.login(self.VALID_USERNAME, self.VALID_PASSWORD)
-
-        # Get welcome message after login
-        actual_message = self.home_page.get_welcome_message()
-
-        # Verifying correct welcome message is displayed
-        self.assertEqual(f"Welcome {self.VALID_USERNAME}", actual_message)
-
-    def test_TC_202_login_with_non_existing_user(self):
-        # Testing login attempt with a user that does not exist
-
-        self.home_page.open_login_modal()
-
-        # Generating random credentials
-        random_username = self.fake.user_name()
-        random_password = self.fake.password()
-
-        self.login_modal.login(random_username, random_password)
-
-        # Capturing alert message
-        actual_alert = self.login_modal.get_alert_text()
-
-        # Validating error message
-        self.assertEqual("User does not exist.", actual_alert)
-
-    def test_TC_203_login_with_invalid_password(self):
-        # Testing login with correct username but wrong password
-
-        self.home_page.open_login_modal()
-
-        # Generating random password
-        random_password = self.fake.password()
-
-        self.login_modal.login(self.VALID_USERNAME, random_password)
-
-        # Capturing alert message
-        actual_alert = self.login_modal.get_alert_text()
-
-        # Validating error message
-        self.assertEqual("Wrong password.", actual_alert)
-
-    def test_TC_204_login_with_missing_password(self):
-        # Testing login when username is correct but password field is empty
-
-        self.home_page.open_login_modal()
-
-        self.login_modal.login(self.VALID_USERNAME, "")
-
-        # Capturing alert message
-        actual_alert = self.login_modal.get_alert_text()
-
-        # Validating validation message
-        self.assertEqual(
-            "Please fill out Username and Password.",
-            actual_alert
+        # Perform login action
+        # Uses valid username/password
+        login_modal.login(
+            self.VALID_USERNAME,
+            self.VALID_PASSWORD
         )
 
+        # Verifying welcome message after successful login
+        # Example:
+        # Welcome aga-chudy
+        assert (
+            home_page.get_welcome_message()
+            == f"Welcome {self.VALID_USERNAME}"
+        )
 
-    def tearDown(self):
-        # Runs after each test
+    # Allure report hierarchy
+    @allure.epic("Authentication")
+    @allure.feature("Login")
+    @allure.story("negative Login")
 
-        # Close browser
-        self.driver.quit()
+    # Pytest parametrization
+    # Instead of writing 3 separate tests,pytest automatically runs this test 3 times
+    # three parameters (from lines 89-91) are used
+    # Each tuple represents:
+    # username, password, expected alert
 
+    @pytest.mark.parametrize(
+        "username,password,expected_alert",
 
-# Allows running the test file directly
-if __name__ == "__main__":
-    unittest.main()
+        [
+            # TC_202_Log_In_With_Non_Existing_User:
+            (
+                fake.user_name(),
+                fake.password(),
+                "User does not exist."
+            ),
+
+            # TC_203_Log_In_With_Invalid_Password:
+            (
+                VALID_USERNAME,
+                fake.password(),
+                "Wrong password."
+            ),
+
+            # TC_204_Log_In_With_Missing_Password:
+            (
+                VALID_USERNAME,
+                "",
+                "Please fill out Username and Password."
+            )
+        ]
+    )
+
+    # Test case to verify negative login scenarios
+    def test_login_negative_scenarios(
+        self,
+
+        # Browser fixture from base_page.py
+        driver,
+
+        # Parameters are injected automatically by pytest
+        username,
+        password,
+        expected_alert
+    ):
+
+        # Create HomePage object
+        home_page = HomePage(driver)
+
+        # Create LoginModal object
+        login_modal = LoginModal(driver)
+
+        # Open website
+        home_page.open_url(BASE_URL)
+
+        # Open login popup/modal
+        home_page.open_login_modal()
+
+        # Attempt login with test data
+        login_modal.login(username, password)
+
+        # Verifying alert message
+        # Method also automatically accepts/closes alert
+        assert (
+            login_modal.get_alert_text_and_accept()
+            == expected_alert
+        )

@@ -1,83 +1,112 @@
+# Import Selenium locator strategy class
+#
+# By allows us to locate elements using:
+# - ID
+# - XPath
+# - CSS Selector
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
+
+
+# Import BasePage
+#
+# OrderModal inherits reusable methods from BasePage, such as:
+# - click()
+# - type_text()
+# - get_text()
+# - is_visible()
 from pages.base_page import BasePage
 
-# OrderModal represents the purchase/order popup shown when placing an order.
-# It inherits functionality from BasePage.
+
+# Order Modal Page Object
+#
+# Represents the purchase/order popup modal
 class OrderModal(BasePage):
 
-    # ===== LOCATORS =====
-
-    # The modal container itself (used to check if it's visible)
+    # Locator for the order modal container
+    #
+    # HTML example:
+    # <div id="orderModal">
     MODAL = (By.ID, "orderModal")
 
-    # Button to confirm the purchase
-    PURCHASE_BUTTON = (By.XPATH, "//button[text()='Purchase']")
+    # Locator for Purchase button
+    #
+    # XPath explanation:
+    #
+    # //button[text()='Purchase']
+    # -> find button whose visible text is exactly "Purchase"
+    PURCHASE_BUTTON = (
+        By.XPATH,
+        "//button[text()='Purchase']"
+    )
 
-    # Element showing the total price inside the modal
+    # Locator for total price shown in modal
+    #
+    # Example:
+    # Total: 400
     TOTAL_PRICE = (By.ID, "totalm")
 
-    # Input fields inside the form
+    # Locator for customer name input field
     NAME_INPUT = (By.ID, "name")
+
+    # Locator for credit card input field
     CARD_INPUT = (By.ID, "card")
 
-    # Success popup shown after completing purchase
-    # (this uses a CSS class from SweetAlert library)
-    SUCCESS_POPUP = (By.CSS_SELECTOR, ".sweet-alert.showSweetAlert.visible")
+    # Locator for success popup after successful purchase
+    #
+    # CSS selector explanation:
+    #
+    # .sweet-alert.showSweetAlert.visible
+    #
+    # Means:
+    # find element containing ALL these classes:
+    # - sweet-alert
+    # - showSweetAlert
+    # - visible
+    SUCCESS_POPUP = (
+        By.CSS_SELECTOR,
+        ".sweet-alert.showSweetAlert.visible"
+    )
 
-    # ===== STATE / VISIBILITY =====
-
+    # Checks if order modal is visible
     def is_visible(self):
-        # Waits until the modal is visible on the page
-        # Returns True if it is displayed
-        return self.wait.until(
-            EC.visibility_of_element_located(self.MODAL)
-        ).is_displayed()
 
-    # ===== DATA / QUERY METHODS =====
+        # super() accesses methods from parent class (BasePage)
+        #
+        # is_visible() returns True/False
+        return super().is_visible(self.MODAL)
 
+    # Returns total price text from modal
+    #
+    # Example:
+    # "Total: 400"
     def get_total_price(self):
-        # Waits until the total price is visible
-        element = self.wait.until(
-            EC.visibility_of_element_located(self.TOTAL_PRICE)
-        )
 
-        # Returns the price text (e.g., "790")
-        return element.text
+        # get_text() comes from BasePage
+        return self.get_text(self.TOTAL_PRICE)
 
-    # ===== FORM INPUT METHODS =====
-
+    # Enters customer name into name field
     def enter_name(self, name):
-        # Waits for the name input field to be visible
-        field = self.wait.until(
-            EC.visibility_of_element_located(self.NAME_INPUT)
-        )
 
-        # Clears existing value and enters new name
-        field.clear()
-        field.send_keys(name)
+        # type_text() comes from BasePage
+        self.type_text(self.NAME_INPUT, name)
 
+    # Enters credit card number into card field
     def enter_card(self, card):
-        # Same pattern for card input field
-        field = self.wait.until(
-            EC.visibility_of_element_located(self.CARD_INPUT)
-        )
-        field.clear()
-        field.send_keys(card)
 
-    # ===== ACTION METHODS =====
+        # type_text() comes from BasePage
+        self.type_text(self.CARD_INPUT, card)
 
+    # Clicks Purchase button
     def click_purchase(self):
-        # Waits until the purchase button is clickable, then clicks it
-        self.wait.until(
-            EC.element_to_be_clickable(self.PURCHASE_BUTTON)
-        ).click()
 
+        # click() comes from BasePage
+        self.click(self.PURCHASE_BUTTON)
+
+    # Returns success popup text
+    #
+    # Example:
+    # "Thank you for your purchase!"
     def get_success_popup_text(self):
-        # Waits for the success popup to appear after purchase
-        popup = self.wait.until(
-            EC.visibility_of_element_located(self.SUCCESS_POPUP)
-        )
 
-        # Returns the full text shown in the popup
-        return popup.text
+        # get_text() comes from BasePage
+        return self.get_text(self.SUCCESS_POPUP)

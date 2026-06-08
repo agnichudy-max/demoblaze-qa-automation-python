@@ -341,7 +341,7 @@ python -m pytest -v
 Example:
 
 ```bash
-python -m pytest tests/test_login.py
+python -m pytest tests/test_Log_In_Of_Active_User.py
 ```
 
 ---
@@ -351,7 +351,7 @@ python -m pytest tests/test_login.py
 Example:
 
 ```bash
-python -m pytest tests/test_login.py::TestLogin::test_TC_201_login_with_valid_credentials
+python -m pytest tests/test_Log_In_Of_Active_User.py::TestLogin::test_TC_201_login_with_valid_credentials
 ```
 
 ---

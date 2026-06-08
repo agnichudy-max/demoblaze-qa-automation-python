@@ -1,44 +1,73 @@
+# Import Selenium locator strategy class
+#
+# By allows us to locate elements using:
+# - ID
+# - XPath
+# - CSS Selector
+# - Link Text
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
+
+
+# Import BasePage
+#
+# ProductDetailsPage inherits reusable methods from BasePage, such as:
+# - click()
+# - get_text()
+# - type_text()
 from pages.base_page import BasePage
 
-# ProductDetailsPage represents the page shown when a user clicks on a product.
-# It displays product info (name, price) and actions (like "Add to cart").
+
+# Product Details Page Object
+#
+# Represents the product details page
+#
+# Example:
+# Apple monitor 24 page
 class ProductDetailsPage(BasePage):
 
-    # ===== LOCATORS =====
-
-    # The product name (a heading inside the product details section)
+    # Locator for product name/title
+    #
+    # CSS selector explanation:
+    #
+    # #tbodyid h2
+    #
+    # Means:
+    # find <h2> element inside element with id="tbodyid"
+    #
+    # Example:
+    # Apple monitor 24
     PRODUCT_NAME = (By.CSS_SELECTOR, "#tbodyid h2")
 
-    # The "Add to cart" button (found by its visible link text)
-    ADD_TO_CART_BUTTON = (By.LINK_TEXT, "Add to cart")
+    # Locator for Add to cart button
+    #
+    # Link Text locator finds link/button
+    # whose visible text is exactly:
+    # "Add to cart"
+    ADD_TO_CART_BUTTON = (
+        By.LINK_TEXT,
+        "Add to cart"
+    )
 
-    # ===== DATA / QUERY METHODS =====
-
+    # Returns product name text
+    #
+    # Example:
+    # "Apple monitor 24"
     def get_product_name(self):
-        # Waits until the product name is visible on the page
-        element = self.wait.until(
-            EC.visibility_of_element_located(self.PRODUCT_NAME)
-        )
 
-        # Returns the product name text (e.g., "Samsung galaxy s6")
-        return element.text
+        # get_text() comes from BasePage
+        return self.get_text(self.PRODUCT_NAME)
 
-    def get_add_to_cart_button_text(self):
-        # Waits until the "Add to cart" button is visible
-        element = self.wait.until(
-            EC.visibility_of_element_located(self.ADD_TO_CART_BUTTON)
-        )
-
-        # Returns the button text (useful for validation in tests)
-        return element.text
-
-    # ===== ACTION METHODS =====
-
+    # Clicks Add to cart button
     def add_to_cart(self):
-        # Waits until the "Add to cart" button is clickable
-        # (visible + enabled), then clicks it
-        self.wait.until(
-            EC.element_to_be_clickable(self.ADD_TO_CART_BUTTON)
-        ).click()
+
+        # click() comes from BasePage
+        self.click(self.ADD_TO_CART_BUTTON)
+
+    # Returns Add to cart button text
+    #
+    # Example:
+    # "Add to cart"
+    def get_add_to_cart_button_text(self):
+
+        # get_text() comes from BasePage
+        return self.get_text(self.ADD_TO_CART_BUTTON)

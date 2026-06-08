@@ -1,55 +1,67 @@
+# Import Selenium locator strategy class
+#
+# By lets us locate elements using:
+# - ID
+# - XPath
+# - CSS selector
+# - link text
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
+
+
+# Import BasePage
+#
+# CartPage inherits reusable methods from BasePage, such as:
+# - click()
+# - get_text()
+# - is_visible()
+# - find_elements()
 from pages.base_page import BasePage
 
 
-# CartPage represents the shopping cart page.
-# It inherits from BasePage.
+# Cart Page Object
+#
+# Represents the cart page in the application
 class CartPage(BasePage):
 
-    # Locators: Define how Selenium finds elements on the page.
-    # Using tuples (By.<METHOD>, "selector").
+    # Locator for all product rows in the cart table
+    #
+    # "#tbodyid tr" means:
+    # find all table rows inside the element with id="tbodyid"
+    PRODUCT_ROWS = (
+        By.CSS_SELECTOR,
+        "#tbodyid tr"
+    )
 
-    # Finds all rows (<tr>) inside the cart table body (#tbodyid)
-    PRODUCT_ROWS = (By.CSS_SELECTOR, "#tbodyid tr")
+    # Locator for the Place Order button
+    PLACE_ORDER_BUTTON = (
+        By.XPATH,
+        "//button[text()='Place Order']"
+    )
 
-    # Finds the "Place Order" button using its visible text
-    PLACE_ORDER_BUTTON = (By.XPATH, "//button[text()='Place Order']")
-
-    # Finds the element that displays the total price
+    # Locator for the total price displayed in the cart
     TOTAL_PRICE = (By.ID, "totalp")
 
+    # Returns the number of products currently shown in the cart
     def get_number_of_products(self):
-        # Waits until all product rows are visible on the page.
-        # This ensures the cart has loaded before counting items.
-        products = self.wait.until(
-            EC.visibility_of_all_elements_located(self.PRODUCT_ROWS)
-        )
 
-        # Returns the number of products in the cart
-        return len(products)
+        # find_elements() returns a list
+        # len() counts how many elements are in that list
+        return len(self.find_elements(self.PRODUCT_ROWS))
 
+    # Checks if the Place Order button is visible
     def is_place_order_button_visible(self):
-        # Waits until the "Place Order" button is visible
-        element = self.wait.until(
-            EC.visibility_of_element_located(self.PLACE_ORDER_BUTTON)
-        )
 
-        # is_displayed() returns True if the element is visible to the user
-        return element.is_displayed()
+        # is_visible() comes from BasePage
+        return self.is_visible(self.PLACE_ORDER_BUTTON)
 
+    # Clicks the Place Order button
     def click_place_order(self):
-        # Waits until the button is clickable (visible + enabled)
-        # This avoids common Selenium errors where elements are not ready
-        self.wait.until(
-            EC.element_to_be_clickable(self.PLACE_ORDER_BUTTON)
-        ).click()
 
+        # click() comes from BasePage
+        return self.click(self.PLACE_ORDER_BUTTON)
+
+    # Gets the total price text from the cart
     def get_total_price(self):
-        # Waits until the total price element is visible
-        element = self.wait.until(
-            EC.visibility_of_element_located(self.TOTAL_PRICE)
-        )
 
-        # Returns the text value (e.g., "790")
-        return element.text
+        # get_text() comes from BasePage
+        return self.get_text(self.TOTAL_PRICE)

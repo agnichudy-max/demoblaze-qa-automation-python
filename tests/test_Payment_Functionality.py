@@ -1,121 +1,203 @@
-import unittest
-from selenium import webdriver
+# Import Allure reporting library
+#
+# Used to organize tests inside Allure reports
+import allure
+
+
+# Import Faker library
+#
+# Faker generates fake/random test data
+#
+# Examples:
+# - names
+# - credit card numbers
+from faker import Faker
+
+
+# Import base URL from config file
+#
+# Keeps configuration centralized
+from config.config import BASE_URL
+
+
+# Import Page Objects
+#
+# Page Objects contain reusable browser interaction methods
 from pages.home_page import HomePage
 from pages.product_details_page import ProductDetailsPage
 from pages.cart_page import CartPage
 from pages.order_modal import OrderModal
 
 
-# This test class verifies the full payment (purchase) flow:
-# - Opening the order form
-# - Validating form errors
-# - Completing a purchase successfully
-class TestPaymentFunctionality(unittest.TestCase):
+# Create Faker object
+#
+# Used later to generate random payment data
+fake = Faker()
 
-    # ===== TEST DATA =====
-    BASE_URL = "https://www.demoblaze.com/index.html"
+
+# Test class
+#
+# Groups all payment-related tests together
+class TestPaymentFunctionality:
+
+    # Product category used in tests
     CATEGORY = "Monitors"
+
+    # Product used in tests
     PRODUCT = "Apple monitor 24"
 
-    def setUp(self):
-        # Runs before each test
+    # Helper method
+    #
+    # Reusable precondition method
+    #
+    # Steps:
+    # 1. Open website
+    # 2. Open category
+    # 3. Open product
+    # 4. Add product to cart
+    # 5. Accept popup alert
+    # 6. Open cart page
+    #
+    # This avoids duplicating the same logic in every test
+    def add_product_to_cart(self, driver):
 
-        # Starting browser
-        self.driver = webdriver.Chrome()
-        self.driver.maximize_window()
+        # Create HomePage object
+        home_page = HomePage(driver)
 
-        # Initializing page objects
-        self.home_page = HomePage(self.driver)
-        self.product_page = ProductDetailsPage(self.driver)
-        self.cart_page = CartPage(self.driver)
-        self.order_modal = OrderModal(self.driver)
+        # Open website
+        home_page.open_url(BASE_URL)
 
-        # Opening the application
-        self.home_page.open(self.BASE_URL)
+        # Open category
+        home_page.select_category(self.CATEGORY)
 
-    # ===== HELPER METHOD =====
+        # Open product details page
+        home_page.select_product(self.PRODUCT)
 
-    def add_product_to_cart(self):
-        # Reusable precondition for multiple tests:
-        # Adding a product to the cart and navigates to cart page
+        # Create Product Details Page object
+        product_page = ProductDetailsPage(driver)
 
-        # Step 1: Navigating to product
-        self.home_page.select_category(self.CATEGORY)
-        self.home_page.select_product(self.PRODUCT)
+        # Add product to cart
+        product_page.add_to_cart()
 
-        # Step 2: Adding product to cart
-        self.product_page.add_to_cart()
+        # Accept popup alert
+        #
+        # Alert must be closed before continuing
+        product_page.accept_alert()
 
-        # Accepting confirmation alert
-        self.product_page.accept_alert()
+        # Open cart page
+        home_page.open_cart()
 
-        # Step 3: Going to cart page
-        self.home_page.open_cart()
+    # Allure report hierarchy
+    #
+    # Epic   = large business area
+    # Feature = specific functionality
+    # Story   = exact scenario
+    @allure.epic("Payment Functionality")
+    @allure.feature("Open Order")
+    @allure.story("Open order from cart")
 
-    # ===== TEST CASES =====
+    # Test case
+    #
+    # Verifies order modal opens correctly
+    def test_TC_601_open_order_form_from_cart(self, driver):
 
-    def test_TC_601_open_order_form_from_cart(self):
-        # Test that clicking "Place Order" opens the order modal
+        # Add product to cart
+        self.add_product_to_cart(driver)
 
-        self.add_product_to_cart()
+        # Create Cart Page object
+        cart_page = CartPage(driver)
 
-        # Click "Place Order"
-        self.cart_page.click_place_order()
+        # Click Place Order button
+        cart_page.click_place_order()
 
-        # Verifying that the modal is visible
-        self.assertTrue(self.order_modal.is_visible())
+        # Create Order Modal object
+        order_modal = OrderModal(driver)
 
-    def test_TC_602_validate_empty_purchase_form_error_message(self):
-        # Testing validation when submitting empty order form
+        # Verify order modal is visible
+        assert order_modal.is_visible()
 
-        self.add_product_to_cart()
+    # Allure report hierarchy
+    @allure.epic("Payment Functionality")
+    @allure.feature("Purchase")
+    @allure.story("Purchase form error message")
 
-        self.cart_page.click_place_order()
+    # Test case
+    #
+    # Verifies error message appears
+    # when purchase form is submitted empty
+    def test_TC_602_validate_empty_purchase_form_error_message(self, driver):
 
-        # Clicking purchase without filling required fields
-        self.order_modal.click_purchase()
+        # Add product to cart
+        self.add_product_to_cart(driver)
 
-        # Getting popup message
-        alert_text = self.order_modal.get_alert_text()
+        # Create Cart Page object
+        cart_page = CartPage(driver)
 
-        # Validating expected error message
-        self.assertEqual("Please fill out Name and Creditcard.", alert_text)
+        # Open order modal
+        cart_page.click_place_order()
 
-    def test_TC_603_complete_purchase_with_name_and_card(self):
-        # Testing successful purchase flow
+        # Create Order Modal object
+        order_modal = OrderModal(driver)
 
-        self.add_product_to_cart()
+        # Click Purchase button without filling form
+        order_modal.click_purchase()
 
-        # Getting total price from cart page
-        cart_total = self.cart_page.get_total_price()
+        # Verify browser alert message
+        #
+        # Method also automatically accepts/closes alert
+        assert (
+            order_modal.get_alert_text_and_accept()
+            == "Please fill out Name and Creditcard."
+        )
 
-        # Opening order modal
-        self.cart_page.click_place_order()
+    # Allure report hierarchy
+    @allure.epic("Payment Functionality")
+    @allure.feature("Purchase")
+    @allure.story("Purchase with name and card")
 
-        # Verifying total price inside modal matches cart total
-        modal_total = self.order_modal.get_total_price()
-        self.assertEqual(f"Total: {cart_total}", modal_total)
+    # Test case
+    #
+    # Verifies successful purchase flow
+    def test_TC_603_complete_purchase_with_name_and_card(self, driver):
 
-        # Filling in purchase form
-        self.order_modal.enter_name("aga-chudy")
-        self.order_modal.enter_card("123456")
+        # Add product to cart
+        self.add_product_to_cart(driver)
 
-        # Submitting purchase
-        self.order_modal.click_purchase()
+        # Create Cart Page object
+        cart_page = CartPage(driver)
 
-        # Capturing success popup text
-        popup_text = self.order_modal.get_success_popup_text()
+        # Retrieve total price from cart
+        cart_total = cart_page.get_total_price()
 
-        # Validating that correct amount appears in confirmation
-        self.assertIn(f"Amount: {cart_total} USD", popup_text)
+        # Open order modal
+        cart_page.click_place_order()
 
-    def tearDown(self):
-        # Runs after each test
+        # Create Order Modal object
+        order_modal = OrderModal(driver)
 
-        # Closing browser
-        self.driver.quit()
+        # Verify total price inside order modal
+        #
+        # Example:
+        # Total: 400
+        assert (
+            order_modal.get_total_price()
+            == f"Total: {cart_total}"
+        )
 
+        # Enter random fake customer name
+        order_modal.enter_name(fake.name())
 
-# Allows running the test file directly
-if __name__ == "__main__":
-    unittest.main()
+        # Enter random fake credit card number
+        order_modal.enter_card(fake.credit_card_number())
+
+        # Click Purchase button
+        order_modal.click_purchase()
+
+        # Retrieve success popup text
+        popup_text = order_modal.get_success_popup_text()
+
+        # Verify purchase amount appears in popup
+        #
+        # Example:
+        # Amount: 400 USD
+        assert f"Amount: {cart_total} USD" in popup_text

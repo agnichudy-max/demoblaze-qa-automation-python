@@ -1,101 +1,163 @@
-import unittest
-from selenium import webdriver
+# Import Allure reporting library
+#
+# Used for:
+# - test categorization
+# - reporting
+# - readable test hierarchy
+import allure
+
+
+# Import base URL from config file
+#
+# Keeps configuration centralized instead of hardcoding URLs
+from config.config import BASE_URL
+
+
+# Import Page Objects
+#
+# Page Objects contain reusable UI interaction methods
 from pages.home_page import HomePage
 from pages.product_details_page import ProductDetailsPage
 from pages.cart_page import CartPage
 
 
-# This test class verifies cart-related functionality:
-# - Viewing product details
-# - Adding a product to the cart
-# - Verifying cart contents
-class TestCartFunctionality(unittest.TestCase):
+# Test class
+#
+# Groups together all cart-related test cases
+class TestCartFunctionality:
 
-    # ===== TEST DATA =====
-    BASE_URL = "https://www.demoblaze.com/index.html"
+    # Product category used in tests
     CATEGORY = "Monitors"
+
+    # Product used in tests
     PRODUCT = "Apple monitor 24"
 
-    def setUp(self):
-        # Runs before each test
+    # Helper method
+    #
+    # This avoids duplicating navigation logic
+    #
+    # Steps:
+    # 1. Open homepage
+    # 2. Open category
+    # 3. Open product page
+    def open_product_page(self, driver):
 
-        # Starting browser
-        self.driver = webdriver.Chrome()
-        self.driver.maximize_window()
+        # Create HomePage object
+        #
+        # Gives access to homepage methods
+        home_page = HomePage(driver)
 
-        # Initializing page objects (Page Object Model)
-        self.home_page = HomePage(self.driver)
-        self.product_details_page = ProductDetailsPage(self.driver)
-        self.cart_page = CartPage(self.driver)
+        # Open website
+        home_page.open_url(BASE_URL)
 
-        # Opening the application
-        self.home_page.open(self.BASE_URL)
+        # Click "Monitors" category
+        home_page.select_category(self.CATEGORY)
 
-    def open_apple_monitor_details_page(self):
-        # Helper method to reduce duplicated steps in tests
+        # Click specific product
+        home_page.select_product(self.PRODUCT)
 
-        # Step 1: Selecting category (e.g., "Monitors")
-        self.home_page.select_category(self.CATEGORY)
+        # Return HomePage object
+        #
+        # Needed later for cart navigation
+        return home_page
 
-        # Step 2: Selecting specific product
-        self.home_page.select_product(self.PRODUCT)
+    # Allure metadata
+    #
+    # Creates report structure:
+    # Epic -> Feature -> Story
+    #
+    # Helps organize large test suites visually
+    @allure.epic("Product")
+    @allure.feature("Product Details")
+    @allure.story("Show Product Details")
 
-    # ===== TEST CASES =====
+    # Test case
+    #
+    # Verifies product details page loads correctly
+    def test_TC_501_view_product_details_page_load(self, driver):
 
-    def test_TC_501_view_product_details_page_load(self):
-        # Testing that product details page loads correctly
+        # Open product page using helper method
+        self.open_product_page(driver)
 
-        self.open_apple_monitor_details_page()
+        # Create Product Details Page object
+        product_page = ProductDetailsPage(driver)
 
-        # Getting actual values from the page
-        actual_product_name = self.product_details_page.get_product_name()
-        actual_button_text = self.product_details_page.get_add_to_cart_button_text()
+        # Verify product name is correct
+        #
+        # Expected:
+        # Apple monitor 24
+        assert (
+            product_page.get_product_name()
+            == self.PRODUCT
+        )
 
-        # Validating expected values
-        self.assertEqual(self.PRODUCT, actual_product_name)
-        self.assertEqual("Add to cart", actual_button_text)
+        # Verify Add to cart button text
+        assert (
+            product_page.get_add_to_cart_button_text()
+            == "Add to cart"
+        )
 
-    def test_TC_502_add_product_to_cart_popup_confirmation(self):
-        # Testing that adding a product triggers a confirmation alert
+    # Allure report categorization
+    @allure.epic("Product")
+    @allure.feature("Product Details")
+    @allure.story("Add to cart")
 
-        self.open_apple_monitor_details_page()
+    # Test case
+    #
+    # Verifies alert popup after adding product to cart
+    def test_TC_502_add_product_to_cart_popup_confirmation(self, driver):
 
-        # Click "Add to cart"
-        self.product_details_page.add_to_cart()
+        # Open product page
+        self.open_product_page(driver)
 
-        # getting alert text (browser popup)
-        actual_alert = self.product_details_page.get_alert_text()
+        # Create Product Details Page object
+        product_page = ProductDetailsPage(driver)
 
-        # Validate popup message
-        self.assertEqual("Product added", actual_alert)
+        # Click Add to cart button
+        product_page.add_to_cart()
 
-    def test_TC_503_view_cart_with_one_added_product(self):
-        # Testing that the cart contains the added product
+        # Verify alert message
+        #
+        # Also accepts/closes alert automatically
+        assert (
+            product_page.get_alert_text_and_accept()
+            == "Product added"
+        )
 
-        self.open_apple_monitor_details_page()
+    # Allure report categorization
+    @allure.epic("Product")
+    @allure.feature("Product Details")
+    @allure.story("Cart with one product")
 
-        # Adding product to a cart
-        self.product_details_page.add_to_cart()
+    # Test case
+    #
+    # Verifies cart contains one product after adding it
+    def test_TC_503_view_cart_with_one_added_product(self, driver):
 
-        # Accepting the confirmation alert (click "OK")
-        self.product_details_page.accept_alert()
+        # Open product page
+        #
+        # Save returned HomePage object
+        home_page = self.open_product_page(driver)
 
-        # Navigating to cart page
-        self.home_page.open_cart()
+        # Create Product Details Page object
+        product_page = ProductDetailsPage(driver)
 
-        # Verify:
-        # - Exactly 1 product is in the cart
-        # - "Place Order" button is visible
-        self.assertEqual(1, self.cart_page.get_number_of_products())
-        self.assertTrue(self.cart_page.is_place_order_button_visible())
+        # Add product to cart
+        product_page.add_to_cart()
 
-    def tearDown(self):
-        # Running after each test
+        # Accept alert popup
+        #
+        # Alert must be closed before interacting with page again
+        product_page.accept_alert()
 
-        # Closing browser
-        self.driver.quit()
+        # Open cart page
+        home_page.open_cart()
 
+        # Create Cart Page object
+        cart_page = CartPage(driver)
 
-# Allows running the test file directly
-if __name__ == "__main__":
-    unittest.main()
+        # Verify cart contains exactly one product
+        assert cart_page.get_number_of_products() == 1
+
+        # Verify Place Order button is visible
+        assert cart_page.is_place_order_button_visible()
